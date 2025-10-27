@@ -215,50 +215,55 @@ function CoopDistortionMonolith(uic){
 CoopDistortionMonolith.prototype = Object.create(Task.prototype);
 CoopDistortionMonolith.prototype.constructor = CoopDistortionMonolith;
 
-CoopDistortionMonolith.prototype.run = async function(args){
-    periodic(()=>this.runFireMonolith(), this.monolithFireInterval);
+CoopDistortionMonolith.prototype.run = function(args){
+    var self = this;
+    periodic(function(){ return self.runFireMonolith(); }, this.monolithFireInterval);
     this.maxWaveCount = args.max_wave_count;
-    try{
-        await sleep((this.maxWaveCount/250)*3600);
-    }catch(e){
+    return sleep((this.maxWaveCount/250)*3600).catch(function(e){
         if(e.name==="AbortError") console.warn("[!] Task aborted");
-    }finally{
-        console.log("All tasks stopped gracefully.");
-    }
+    }).then(function(){ console.log("All tasks stopped gracefully."); });
 };
 
-CoopDistortionMonolith.prototype.runFireMonolith = async function(){
+CoopDistortionMonolith.prototype.runFireMonolith = function(){
+    var self = this;
     var groupIdx = this.groupIdxs.next().value;
-    await acquireLock(this.monolithLock);
-    for(var k=0;k<this.swipeSlotIdcsOnFire.length;k++){
-        var pair = this.swipeSlotIdcsOnFire[k];
-        var slot1 = this.boardState[groupIdx][pair[0]];
-        var slot2 = this.boardState[groupIdx][pair[1]];
-        this.board.swipeSlot(slot1, slot2);
-    }
-    releaseLock(this.monolithLock);
-    if(this.monolithFireCount % this.numMonolithGroup === 0){
-        this.monolithFireCount=0;
-        (async()=>{await this.monitorWaveProgression();})();
-    }
-    this.monolithFireCount+=1;
+    return acquireLock(this.monolithLock).then(function(){
+        for(var k=0;k<self.swipeSlotIdcsOnFire.length;k++){
+            var pair = self.swipeSlotIdcsOnFire[k];
+            var slot1 = self.boardState[groupIdx][pair[0]];
+            var slot2 = self.boardState[groupIdx][pair[1]];
+            self.board.swipeSlot(slot1, slot2);
+        }
+        releaseLock(self.monolithLock);
+        if(self.monolithFireCount % self.numMonolithGroup === 0){
+            self.monolithFireCount=0;
+            self.monitorWaveProgression();
+        }
+        self.monolithFireCount+=1;
+    });
 };
 
-CoopDistortionMonolith.prototype.updateScreencap = async function(){
-    var roiList = [this.pxProfile.WAVE_CIRCLE_ROI];
-    var imgs = await this.uic.roiScreencap(roiList,"r");
-    this.field.updateScreencaps(roiList, imgs);
+CoopDistortionMonolith.prototype.updateScreencap = function(){
+    var self = this;
+    return this.uic.roiScreencap([this.pxProfile.WAVE_CIRCLE_ROI],"r").then(function(imgs){
+        self.field.updateScreencaps([self.pxProfile.WAVE_CIRCLE_ROI], imgs);
+    });
 };
 
-CoopDistortionMonolith.prototype.monitorWaveProgression = async function(){
-    await sleep(0.5);
-    await this.updateScreencap();
-    if(this.field.waveProgressionDetected()){
-        await acquireLock(this.monolithLock);
-        this.copyBarrier();
-        await sleep(this.shortBreakTimeAfterBarrierCopy);
-        releaseLock(this.monolithLock);
-    }
+CoopDistortionMonolith.prototype.monitorWaveProgression = function(){
+    var self = this;
+    return sleep(0.5).then(function(){
+        return self.updateScreencap();
+    }).then(function(){
+        if(self.field.waveProgressionDetected()){
+            return acquireLock(self.monolithLock).then(function(){
+                self.copyBarrier();
+                return sleep(self.shortBreakTimeAfterBarrierCopy).then(function(){
+                    releaseLock(self.monolithLock);
+                });
+            });
+        }
+    });
 };
 
 CoopDistortionMonolith.prototype.copyBarrier = function(){
@@ -268,20 +273,25 @@ CoopDistortionMonolith.prototype.copyBarrier = function(){
 };
 
 // ===== utils.js =====
-function sleep(sec){ return new Promise(r=>setTimeout(r,sec*1000)); }
-async function periodic(func,intervalSec){
-    var nextTime = Date.now()/1000 + intervalSec;
-    while(true){
-        var now = Date.now()/1000;
-        var sleepTime = nextTime-now;
-        if(sleepTime>0) await sleep(sleepTime);
-        else nextTime -= sleepTime;
-        var result = func();
-        if(result instanceof Promise) await result;
-        nextTime += intervalSec;
-    }
+function sleep(sec){ return new Promise(function(resolve){ setTimeout(resolve,sec*1000); }); }
+function periodic(func,intervalSec){
+    return new Promise(function(resolve){
+        var nextTime = Date.now()/1000 + intervalSec;
+        (function loop(){
+            var now = Date.now()/1000;
+            var sleepTime = nextTime-now;
+            if(sleepTime>0) setTimeout(function(){
+                Promise.resolve(func()).then(function(){ nextTime += intervalSec; loop(); });
+            }, sleepTime*1000);
+            else { nextTime -= sleepTime; Promise.resolve(func()).then(function(){ nextTime += intervalSec; loop(); }); }
+        })();
+    });
 }
-async function acquireLock(lock){ while(lock.value) await sleep(0.01); lock.value=true; }
+function acquireLock(lock){ return new Promise(function(resolve){
+    (function wait(){
+        if(!lock.value){ lock.value=true; resolve(); } else setTimeout(wait,10);
+    })();
+}); }
 function releaseLock(lock){ lock.value=false; }
 function* cycle(arr){ var i=0; while(true) yield arr[i++%arr.length]; }
 
@@ -304,13 +314,12 @@ function parseArgs(){
 }
 function mapToTask(abbr){ var mapping={dm:"CoopDistortionMonolith"}; return mapping[abbr]; }
 
-async function main(){
+(function main(){
     var args=parseArgs();
     var uic=new UiController();
     var taskName=mapToTask(args.task);
     var TaskClass=Tasks[taskName];
     var taskInstance=new TaskClass(uic);
-    await taskInstance.run(args);
-}
+    taskInstance.run(args);
+})();
 
-main();
