@@ -217,53 +217,65 @@ CoopDistortionMonolith.prototype.constructor = CoopDistortionMonolith;
 
 CoopDistortionMonolith.prototype.run = function(args){
     var self = this;
-    periodic(function(){ return self.runFireMonolith(); }, this.monolithFireInterval);
     this.maxWaveCount = args.max_wave_count;
-    return sleep((this.maxWaveCount/250)*3600).catch(function(e){
-        if(e.name==="AbortError") console.warn("[!] Task aborted");
-    }).then(function(){ console.log("All tasks stopped gracefully."); });
-};
 
-CoopDistortionMonolith.prototype.runFireMonolith = function(){
-    var self = this;
-    var groupIdx = this.groupIdxs.next().value;
-    return acquireLock(this.monolithLock).then(function(){
-        for(var k=0;k<self.swipeSlotIdcsOnFire.length;k++){
-            var pair = self.swipeSlotIdcsOnFire[k];
-            var slot1 = self.boardState[groupIdx][pair[0]];
-            var slot2 = self.boardState[groupIdx][pair[1]];
-            self.board.swipeSlot(slot1, slot2);
-        }
-        releaseLock(self.monolithLock);
-        if(self.monolithFireCount % self.numMonolithGroup === 0){
-            self.monolithFireCount=0;
-            self.monitorWaveProgression();
-        }
-        self.monolithFireCount+=1;
-    });
-};
-
-CoopDistortionMonolith.prototype.updateScreencap = function(){
-    var self = this;
-    return this.uic.roiScreencap([this.pxProfile.WAVE_CIRCLE_ROI],"r").then(function(imgs){
-        self.field.updateScreencaps([self.pxProfile.WAVE_CIRCLE_ROI], imgs);
-    });
-};
-
-CoopDistortionMonolith.prototype.monitorWaveProgression = function(){
-    var self = this;
-    return sleep(0.5).then(function(){
-        return self.updateScreencap();
-    }).then(function(){
-        if(self.field.waveProgressionDetected()){
-            return acquireLock(self.monolithLock).then(function(){
-                self.copyBarrier();
-                return sleep(self.shortBreakTimeAfterBarrierCopy).then(function(){
-                    releaseLock(self.monolithLock);
+    async.forever(
+        function(next){
+            var groupIdx = self.groupIdxs.next().value;
+            async.eachSeries(self.swipeSlotIdcsOnFire, function(pair, cb){
+                self.acquireLock(self.monolithLock, function(){
+                    var slot1 = self.boardState[groupIdx][pair[0]];
+                    var slot2 = self.boardState[groupIdx][pair[1]];
+                    self.board.swipeSlot(slot1, slot2);
+                    self.releaseLock(self.monolithLock);
+                    cb();
                 });
+            }, function(err){
+                self.monolithFireCount += 1;
+                if(self.monolithFireCount % self.numMonolithGroup === 0){
+                    self.monitorWaveProgression(function(){ next(); });
+                } else {
+                    setTimeout(next, self.monolithFireInterval*1000);
+                }
             });
+        },
+        function(err){
+            console.log("All tasks stopped gracefully.");
         }
-    });
+    );
+};
+
+CoopDistortionMonolith.prototype.acquireLock = function(lock, cb){
+    async.whilst(
+        function(){ return lock.value; },
+        function(next){ setTimeout(next, 10); },
+        function(){ lock.value = true; cb(); }
+    );
+};
+
+CoopDistortionMonolith.prototype.releaseLock = function(lock){ lock.value=false; };
+
+CoopDistortionMonolith.prototype.updateScreencap = function(cb){
+    var imgs = this.uic.roiScreencap([this.pxProfile.WAVE_CIRCLE_ROI],"r");
+    this.field.updateScreencaps([this.pxProfile.WAVE_CIRCLE_ROI], imgs);
+    cb();
+};
+
+CoopDistortionMonolith.prototype.monitorWaveProgression = function(cb){
+    var self = this;
+    setTimeout(function(){
+        self.updateScreencap(function(){
+            if(self.field.waveProgressionDetected()){
+                self.acquireLock(self.monolithLock, function(){
+                    self.copyBarrier();
+                    setTimeout(function(){
+                        self.releaseLock(self.monolithLock);
+                        cb();
+                    }, self.shortBreakTimeAfterBarrierCopy*1000);
+                });
+            } else cb();
+        });
+    }, 500);
 };
 
 CoopDistortionMonolith.prototype.copyBarrier = function(){
@@ -273,26 +285,6 @@ CoopDistortionMonolith.prototype.copyBarrier = function(){
 };
 
 // ===== utils.js =====
-function sleep(sec){ return new Promise(function(resolve){ setTimeout(resolve,sec*1000); }); }
-function periodic(func,intervalSec){
-    return new Promise(function(resolve){
-        var nextTime = Date.now()/1000 + intervalSec;
-        (function loop(){
-            var now = Date.now()/1000;
-            var sleepTime = nextTime-now;
-            if(sleepTime>0) setTimeout(function(){
-                Promise.resolve(func()).then(function(){ nextTime += intervalSec; loop(); });
-            }, sleepTime*1000);
-            else { nextTime -= sleepTime; Promise.resolve(func()).then(function(){ nextTime += intervalSec; loop(); }); }
-        })();
-    });
-}
-function acquireLock(lock){ return new Promise(function(resolve){
-    (function wait(){
-        if(!lock.value){ lock.value=true; resolve(); } else setTimeout(wait,10);
-    })();
-}); }
-function releaseLock(lock){ lock.value=false; }
 function* cycle(arr){ var i=0; while(true) yield arr[i++%arr.length]; }
 
 // ===== Tasks index =====
@@ -314,12 +306,13 @@ function parseArgs(){
 }
 function mapToTask(abbr){ var mapping={dm:"CoopDistortionMonolith"}; return mapping[abbr]; }
 
-(function main(){
+function main(){
     var args=parseArgs();
     var uic=new UiController();
     var taskName=mapToTask(args.task);
     var TaskClass=Tasks[taskName];
     var taskInstance=new TaskClass(uic);
     taskInstance.run(args);
-})();
+}
 
+main();
