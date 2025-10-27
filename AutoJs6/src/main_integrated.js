@@ -156,7 +156,8 @@ UiController.prototype.roiScreencap = function(roiList, extractChannel){
     for(var r=0;r<roiList.length;r++){
         var roi = roiList[r];
         var x = roi[0], y = roi[1], w = roi[2], h = roi[3];
-        if(x<0) x=0; if(y<0) y=0;
+        if(x<0) x=0;
+        if(y<0) y=0;
         if(x+w>imgWidth) w=imgWidth-x;
         if(y+h>imgHeight) h=imgHeight-y;
         if(w<=0||h<=0) continue;
