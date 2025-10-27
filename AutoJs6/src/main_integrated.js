@@ -214,12 +214,8 @@ function CoopDistortionMonolith(uic){
 CoopDistortionMonolith.prototype = Object.create(Task.prototype);
 CoopDistortionMonolith.prototype.constructor = CoopDistortionMonolith;
 
-CoopDistortionMonolith.prototype.run = function(args){
-    this._run(args);
-};
-CoopDistortionMonolith.prototype._run = async function(args){
-    var self=this;
-    periodic(()=>self.runFireMonolith(), this.monolithFireInterval);
+CoopDistortionMonolith.prototype.run = async function(args){
+    periodic(()=>this.runFireMonolith(), this.monolithFireInterval);
     this.maxWaveCount = args.max_wave_count;
     try{
         await sleep((this.maxWaveCount/250)*3600);
@@ -231,7 +227,6 @@ CoopDistortionMonolith.prototype._run = async function(args){
 };
 
 CoopDistortionMonolith.prototype.runFireMonolith = async function(){
-    var self=this;
     var groupIdx = this.groupIdxs.next().value;
     await acquireLock(this.monolithLock);
     for(var k=0;k<this.swipeSlotIdcsOnFire.length;k++){
@@ -314,7 +309,7 @@ async function main(){
     var taskName=mapToTask(args.task);
     var TaskClass=Tasks[taskName];
     var taskInstance=new TaskClass(uic);
-    taskInstance.run(args);
+    await taskInstance.run(args);
 }
 
 main();
