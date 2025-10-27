@@ -66,7 +66,6 @@ class CoopDistortionMonolith(Task):
         self.max_wave_count = args.max_wave_count
 
         try:
-            # Ctrl+CでKeyboardInterruptが発生するまで待つ
             await asyncio.sleep(self.max_wave_count / 250 * 3600)
         except asyncio.CancelledError:
             pass
