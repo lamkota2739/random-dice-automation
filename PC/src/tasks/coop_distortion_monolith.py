@@ -1,5 +1,6 @@
-from core.board import Board, DiceSlot
+from core.board import Board
 from core.constants import *
+from core.dice_slot import DiceSlot
 from core.field import Field
 from core.ui_controller import Uia2Controller
 from .task import Task
