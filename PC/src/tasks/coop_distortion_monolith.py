@@ -85,12 +85,13 @@ class CoopDistortionMonolith(Task):
                 slot1 = self.board_state[group_idx][slot1_idx]
                 slot2 = self.board_state[group_idx][slot2_idx]
                 self.board.swipe_slot(slot1, slot2)
-        self.monolith_fire_count += 1
 
-        if self.monolith_fire_count % (self.num_monolith_group - 1) == 1:
+        if self.monolith_fire_count % self.num_monolith_group == 0:
             self.monolith_fire_count = 0
             async with asyncio.TaskGroup() as tg:
                 tg.create_task(self.monitor_wave_progression())
+
+        self.monolith_fire_count += 0
 
     async def update_screencap(self):
         roi_list = [
