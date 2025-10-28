@@ -165,7 +165,8 @@ let UiController = {
         const img = this.screencap(); if (!img) return null;
         const imgWidth = img.getWidth(), imgHeight = img.getHeight();
         const roiDataList = [];
-        for (const roi of roiList) {
+        for (let i = 0; i < roiList.length; i++) {
+            const roi = roiList[i];
             let [x, y, w, h] = roi.map(Number);
             if (x < 0) x = 0; if (y < 0) y = 0;
             if (x + w > imgWidth) w = imgWidth - x;
@@ -253,7 +254,9 @@ CoopDistortionMonolith.run = function (args) {
 CoopDistortionMonolith.runFireMonolith = function () {
     const groupIdx = this.groupIdxs.next().value;
     return acquireLock(this.monolithLock).then(() => {
-        for (const [slot1Idx, slot2Idx] of this.swipeSlotIdcsOnFire) {
+        for (let i = 0; i < this.swipeSlotIdcsOnFire.length; i++) {
+            const pair = this.swipeSlotIdcsOnFire[i];
+            const slot1Idx = pair[0], slot2Idx = pair[1];
             const slot1 = this.boardState[groupIdx][slot1Idx];
             const slot2 = this.boardState[groupIdx][slot2Idx];
             this.board.swipeSlot(slot1.coords, slot2.coords);
@@ -286,7 +289,10 @@ CoopDistortionMonolith.monitorWaveProgression = function () {
 };
 
 CoopDistortionMonolith.copyBarrier = function () {
-    for (const jokerSlot of this.jokerSlots) this.board.swipeSlot(jokerSlot.coords, this.barrierSlot.coords);
+    for (let i = 0; i < this.jokerSlots.length; i++) {
+        const jokerSlot = this.jokerSlots[i];
+        this.board.swipeSlot(jokerSlot.coords, this.barrierSlot.coords);
+    }
 };
 
 // ===== Tasks index =====
