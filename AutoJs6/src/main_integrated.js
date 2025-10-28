@@ -274,14 +274,12 @@ CoopDistortionMonolith.updateScreencap = function () {
 };
 
 CoopDistortionMonolith.monitorWaveProgression = function () {
-    sleepAsync(0.5).then(() => {
-        this.updateScreencap();
-        if (this.field.waveProgressionDetected()) {
-            acquireLock(this.monolithLock).then(() => {
-                this.copyBarrier();
-            }).then(() => releaseLock(this.monolithLock));
-        }
-    });
+    this.updateScreencap();
+    if (this.field.waveProgressionDetected()) {
+        acquireLock(this.monolithLock).then(() => {
+            this.copyBarrier();
+        }).then(() => releaseLock(this.monolithLock));
+    }
 };
 
 CoopDistortionMonolith.copyBarrier = function () {
