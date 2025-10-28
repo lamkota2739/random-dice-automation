@@ -12,7 +12,7 @@ import numpy as np
 
 
 class CoopDistortionMonolith(Task):
-    def __init__(self, uic):
+    def __init__(self, uic: UiController):
         """
         board:
                |1  |2  |3  |4  |5
@@ -24,7 +24,6 @@ class CoopDistortionMonolith(Task):
         mode = GameMode.COOP
         resolution = DisplayResolution.PIXEL_2XL
 
-        self.uic = UiController()
         self.px_profile = PixelProfile(resolution, mode)
         self.field = Field(self.px_profile)
         self.board = Board(self.uic, self.px_profile)
