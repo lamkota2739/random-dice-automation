@@ -88,7 +88,7 @@ class CoopDistortionMonolith(Task):
             async with asyncio.TaskGroup() as tg:
                 tg.create_task(self.monitor_wave_progression())
 
-        self.monolith_fire_count += 0
+        self.monolith_fire_count += 1
 
     async def update_screencap(self):
         roi_list = [
