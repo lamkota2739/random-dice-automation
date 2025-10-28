@@ -193,14 +193,14 @@ let UiController = {
 };
 
 // ===== utils.js =====
-function sleep(sec) { return new Promise(r => setTimeout(r, sec * 1000)); }
+function sleepAsync(sec) { return new Promise(r => setTimeout(r, sec * 1000)); }
 function acquireLock(lock) { return new Promise(r => { (function wait() { if (!lock.value) { lock.value = true; r(); } else setTimeout(wait, 10); })(); }); }
 function releaseLock(lock) { lock.value = false; }
 function periodic(func, intervalSec) {
     function loop(nextTime) {
         const now = Date.now() / 1000;
         const sleepTime = nextTime - now;
-        return sleep(sleepTime > 0 ? sleepTime : 0).then(() => {
+        return sleepAsync(sleepTime > 0 ? sleepTime : 0).then(() => {
             const result = func();
             const p = result instanceof Promise ? result : Promise.resolve();
             return p.then(() => loop(nextTime + intervalSec));
@@ -245,7 +245,7 @@ CoopDistortionMonolith.init = function (uic) {
 CoopDistortionMonolith.run = function (args) {
     this.maxWaveCount = args.max_wave_count;
     periodic(() => this.runFireMonolith(), this.monolithFireInterval);
-    sleep((this.maxWaveCount / 250) * 3600).then(() => {
+    sleepAsync((this.maxWaveCount / 250) * 3600).then(() => {
         console.log("All tasks stopped gracefully.");
     });
 };
@@ -275,12 +275,12 @@ CoopDistortionMonolith.updateScreencap = function () {
 };
 
 CoopDistortionMonolith.monitorWaveProgression = function () {
-    sleep(0.5).then(() => {
+    sleepAsync(0.5).then(() => {
         this.updateScreencap();
         if (this.field.waveProgressionDetected()) {
             acquireLock(this.monolithLock).then(() => {
                 this.copyBarrier();
-                return sleep(this.shortBreakTimeAfterBarrierCopy);
+                return sleepAsync(this.shortBreakTimeAfterBarrierCopy);
             }).then(() => releaseLock(this.monolithLock));
         }
     });
