@@ -105,7 +105,7 @@ let Board = {
         this.pxProfile = pxProfile;
         this.rect = pxProfile.BOARD_BOUNDARY_RECT;
         this.swipeSlotDuration = 0.005;
-        this.swipePointOffset = 50;
+        this.swipePointOffset = 40;
         return this;
     },
     convertToImageCoords: function (slot) {
