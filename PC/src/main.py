@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
 
 
-    from core.ui_controller import UiController
+    from core.ui_controller import UiController, DummyUiController
     from tasks.task import Task
     from tasks import *
     from tap import Tap

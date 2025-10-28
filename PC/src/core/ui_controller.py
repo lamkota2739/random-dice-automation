@@ -1,3 +1,4 @@
+from utils import log
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import functools
@@ -73,3 +74,27 @@ class UiController:
         roi_imgs = [img_arr[y:y+h, x:x+w] for (x, y, w, h) in roi_list]
 
         return roi_imgs
+
+class DummyUiController:
+    def __init__(self):
+        pass
+
+    def swipe(self, x1, y1, x2, y2, seconds):
+        log(f"swipe ({int(x1)}, {int(y1)}) -> ({int(x2)}, {int(y2)}) in {seconds} seconds")
+
+    def _screencap(self, extract_channel="rgb") -> np.ndarray:
+        log(f"capture {extract_channel} channel image")
+
+    async def screencap(self, extract_channel="rgb"):
+        loop = asyncio.get_running_loop()
+        with ThreadPoolExecutor() as pool:
+            return await loop.run_in_executor(
+                pool,
+                functools.partial(self._screencap, extract_channel)
+            )
+
+    async def roi_screencap(self, roi_list, extract_channel="rgb") -> list[np.ndarray]:
+        await self.screencap(extract_channel)
+        for (x, y, w, h) in roi_list:
+            log(f"crop ROI ({x}, {y}, {w}, {h}) from captured image")
+        return []

@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import numpy as np
 
 
@@ -20,6 +21,12 @@ async def periodic(func, interval):
             func()
 
         next_time += interval
+
+
+
+def log(message: str):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{now}] {message}")
 
 
 

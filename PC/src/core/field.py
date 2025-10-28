@@ -24,7 +24,10 @@ class Field:
         pass
 
     def wave_progression_detected(self):
-        value = self.imgs[self.px_profile.WAVE_CIRCLE_ROI][0, 0, ColorChannel.R]
+        img = self.imgs.get(self.px_profile.WAVE_CIRCLE_ROI)
+        if not img:
+            return False
+        value = img[0, 0, ColorChannel.R]
         threshold = 255
         wave_circle_is_light = value >= threshold
 
