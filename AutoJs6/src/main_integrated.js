@@ -159,7 +159,7 @@ let UiController = {
         if (!requestScreenCapture()) throw new Error("Screen capture permission required");
         return this;
     },
-    swipe: function (x1, y1, x2, y2, duration) { swipe(x1, y1, x2, y2, duration * 1000); },
+    swipe: function (x1, y1, x2, y2, duration) { swipe(x1, y1, x2, y2, duration * 1000); sleep(30) },
     screencap: function () { const img = captureScreen(); if (!img) throw new Error("Screenshot failed"); return img; },
     roiScreencap: function (roiList, extractChannel) {
         const img = this.screencap(); if (!img) return null;
