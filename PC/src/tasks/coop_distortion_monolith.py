@@ -8,7 +8,6 @@ from utils import periodic
 import asyncio
 import itertools
 import numpy as np
-import time
 
 
 
@@ -52,7 +51,6 @@ class CoopDistortionMonolith(Task):
 
         self.barrier_slot = DiceSlot("b2")
         self.joker_slots = [DiceSlot("a2"), DiceSlot("b1"), DiceSlot("b3"), DiceSlot("c2")]
-        self.short_break_time_after_barrier_copy = 1.8
 
         self.max_wave_count = None
 
@@ -101,14 +99,11 @@ class CoopDistortionMonolith(Task):
         self.field.update_screencaps(roi_list, imgs)
 
     async def monitor_wave_progression(self):
-        await asyncio.sleep(0.5)
-
         await self.update_screencap()
 
         if self.field.wave_progression_detected():
             await self.monolith_lock.acquire()
             self.copy_barrier()
-            time.sleep(self.short_break_time_after_barrier_copy)
             self.monolith_lock.release()
 
     def copy_barrier(self):
