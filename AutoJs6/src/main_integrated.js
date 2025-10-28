@@ -238,7 +238,6 @@ CoopDistortionMonolith.init = function (uic) {
     this.monolithLock = { value: false };
     this.barrierSlot = Object.create(DiceSlot).init("b2");
     this.jokerSlots = ["a2", "b1", "b3", "c2"].map(s => Object.create(DiceSlot).init(s));
-    this.shortBreakTimeAfterBarrierCopy = 1.8;
     return this;
 };
 
@@ -280,7 +279,6 @@ CoopDistortionMonolith.monitorWaveProgression = function () {
         if (this.field.waveProgressionDetected()) {
             acquireLock(this.monolithLock).then(() => {
                 this.copyBarrier();
-                return sleepAsync(this.shortBreakTimeAfterBarrierCopy);
             }).then(() => releaseLock(this.monolithLock));
         }
     });
