@@ -235,6 +235,8 @@ CoopDistortionMonolith.init = function (uic) {
     this.monolithCooldown = 3.0;
     this.monolithFireInterval = this.monolithCooldown / this.numBlueMonoliths;
     this.monolithFireCount = 0;
+    this.barrierCooldown = 21.0;
+    this.lastBarrierCopyTime = Date.now() / 1000 - this.barrierCooldown;
     this.monolithLock = { value: false };
     this.barrierSlot = Object.create(DiceSlot).init("b2");
     this.jokerSlots = ["a2", "b1", "b3", "c2"].map(s => Object.create(DiceSlot).init(s));
@@ -274,10 +276,14 @@ CoopDistortionMonolith.updateScreencap = function () {
 };
 
 CoopDistortionMonolith.monitorWaveProgression = function () {
+    const now = Date.now() / 1000;
+    if (now - this.lastBarrierCopyTime < this.barrierCooldown) return;
+
     this.updateScreencap();
     if (this.field.waveProgressionDetected()) {
         acquireLock(this.monolithLock).then(() => {
             this.copyBarrier();
+            this.lastBarrierCopyTime = now;
         }).then(() => releaseLock(this.monolithLock));
     }
 };

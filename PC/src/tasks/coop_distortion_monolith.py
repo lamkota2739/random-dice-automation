@@ -8,6 +8,7 @@ from utils import periodic
 import asyncio
 import itertools
 import numpy as np
+import time
 
 
 
@@ -45,6 +46,8 @@ class CoopDistortionMonolith(Task):
         self.monolith_cooldown = 3.0
         self.monolith_fire_interval = self.monolith_cooldown / self.num_blue_monoliths
         self.monolith_fire_count = 0
+        self.barrier_cooldown = 21.0
+        self.last_barrier_copy_time = time.time() - self.barrier_cooldown
 
         self.monolith_lock = asyncio.Lock()
 
@@ -84,7 +87,6 @@ class CoopDistortionMonolith(Task):
                 self.board.swipe_slot(slot1, slot2)
 
         if self.monolith_fire_count % self.num_monolith_group == 0:
-            self.monolith_fire_count = 0
             async with asyncio.TaskGroup() as tg:
                 tg.create_task(self.monitor_wave_progression())
 
@@ -98,11 +100,15 @@ class CoopDistortionMonolith(Task):
         self.field.update_screencaps(roi_list, imgs)
 
     async def monitor_wave_progression(self):
+        if time.time() - self.last_barrier_copy_time < self.barrier_cooldown:
+            return
+
         await self.update_screencap()
 
         if self.field.wave_progression_detected():
             await self.monolith_lock.acquire()
             self.copy_barrier()
+            self.last_barrier_copy_time = 0
             self.monolith_lock.release()
 
     def copy_barrier(self):
