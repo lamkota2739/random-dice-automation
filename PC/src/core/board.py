@@ -1,11 +1,11 @@
 from .constants import *
 from .dice_slot import DiceSlot
-from .ui_controller import Uia2Controller
+from .ui_controller import UiController
 
 
 
 class Board:
-    def __init__(self, uic: Uia2Controller, px_profile: PixelProfile):
+    def __init__(self, uic: UiController, px_profile: PixelProfile):
         self.uic = uic
         self.px_profile = px_profile
 

@@ -8,7 +8,7 @@ import uiautomator2 as uia2
 
 
 
-class Uia2Controller:
+class UiController:
     def __init__(self):
         self.device = None
         self.connect()

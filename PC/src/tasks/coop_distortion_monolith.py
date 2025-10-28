@@ -2,7 +2,7 @@ from core.board import Board
 from core.constants import *
 from core.dice_slot import DiceSlot
 from core.field import Field
-from core.ui_controller import Uia2Controller
+from core.ui_controller import UiController
 from .task import Task
 from utils import periodic
 import asyncio
@@ -24,7 +24,7 @@ class CoopDistortionMonolith(Task):
         mode = GameMode.COOP
         resolution = DisplayResolution.PIXEL_2XL
 
-        self.uic = Uia2Controller()
+        self.uic = UiController()
         self.px_profile = PixelProfile(resolution, mode)
         self.field = Field(self.px_profile)
         self.board = Board(self.uic, self.px_profile)

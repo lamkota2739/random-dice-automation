@@ -10,12 +10,12 @@ if __name__ == "__main__":
 
 
 
-    from core.ui_controller import Uia2Controller
+    from core.ui_controller import UiController
     from tasks.task import Task
     from tasks import *
     from tap import Tap
 
-    uic = Uia2Controller()
+    uic = UiController()
 
     def map_to_task(abbr: str) -> Task:
         mapping = {
