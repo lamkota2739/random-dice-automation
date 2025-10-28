@@ -231,7 +231,7 @@ CoopDistortionMonolith.init = function (uic) {
     this.numMonolithsInGroup = this.boardState[0].length;
     this.numBlueMonolithsInGroup = this.numMonolithsInGroup - 1;
     this.numBlueMonoliths = this.numMonolithGroup * this.numBlueMonolithsInGroup;
-    this.groupIdxs = (function* () { for (let i = 0; i < this.numMonolithGroup; i++) yield i; }).call(this);
+    this.groupIdx = 0;
     this.swipeSlotIdcsOnFire = [[0, 1], [1, 0]];
     this.monolithCooldown = 3.0;
     this.monolithFireInterval = this.monolithCooldown / this.numBlueMonoliths;
@@ -252,16 +252,18 @@ CoopDistortionMonolith.run = function (args) {
 };
 
 CoopDistortionMonolith.runFireMonolith = function () {
-    const groupIdx = this.groupIdxs.next().value;
     return acquireLock(this.monolithLock).then(() => {
         for (let i = 0; i < this.swipeSlotIdcsOnFire.length; i++) {
             const pair = this.swipeSlotIdcsOnFire[i];
             const slot1Idx = pair[0], slot2Idx = pair[1];
-            const slot1 = this.boardState[groupIdx][slot1Idx];
-            const slot2 = this.boardState[groupIdx][slot2Idx];
+            const slot1 = this.boardState[this.groupIdx][slot1Idx];
+            const slot2 = this.boardState[this.groupIdx][slot2Idx];
             this.board.swipeSlot(slot1.coords, slot2.coords);
         }
         releaseLock(this.monolithLock);
+
+        this.groupIdx = (this.groupIdx + 1) % this.numMonolithGroup;
+
         if (this.monolithFireCount % this.numMonolithGroup === 0) {
             this.monolithFireCount = 0;
             this.monitorWaveProgression();
