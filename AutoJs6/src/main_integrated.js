@@ -105,7 +105,7 @@ let Board = {
         this.pxProfile = pxProfile;
         this.rect = pxProfile.BOARD_BOUNDARY_RECT;
         this.swipeSlotDuration = 0.005;
-        this.swipePointOffset = 40;
+        this.swipePointOffset = 50;
         return this;
     },
     convertToImageCoords: function (slot) {
@@ -232,7 +232,6 @@ CoopDistortionMonolith.init = function (uic) {
     this.numBlueMonolithsInGroup = this.numMonolithsInGroup - 1;
     this.numBlueMonoliths = this.numMonolithGroup * this.numBlueMonolithsInGroup;
     this.groupIdx = 0;
-    this.swipeSlotIdcsOnFire = [[0, 1], [1, 0]];
     this.monolithCooldown = 3.0;
     this.monolithFireInterval = this.monolithCooldown / this.numBlueMonoliths;
     this.monolithFireCount = 0;
@@ -253,13 +252,10 @@ CoopDistortionMonolith.run = function (args) {
 
 CoopDistortionMonolith.runFireMonolith = function () {
     return acquireLock(this.monolithLock).then(() => {
-        for (let i = 0; i < this.swipeSlotIdcsOnFire.length; i++) {
-            const pair = this.swipeSlotIdcsOnFire[i];
-            const slot1Idx = pair[0], slot2Idx = pair[1];
-            const slot1 = this.boardState[this.groupIdx][slot1Idx];
-            const slot2 = this.boardState[this.groupIdx][slot2Idx];
-            this.board.swipeSlot(slot1.coords, slot2.coords);
-        }
+        const slot1 = this.boardState[this.groupIdx][0];
+        const slot2 = this.boardState[this.groupIdx][1];
+        this.board.swipeSlot(slot1.coords, slot2.coords);
+        this.board.swipeSlot(slot2.coords, slot1.coords);
         releaseLock(this.monolithLock);
 
         this.groupIdx = (this.groupIdx + 1) % this.numMonolithGroup;
