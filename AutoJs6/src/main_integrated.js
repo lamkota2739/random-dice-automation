@@ -294,7 +294,7 @@ const Tasks = { CoopDistortionMonolith };
 
 // ===== main.js =====
 function parseArgs() {
-    const args = { task: null, current_wave_count: 100, max_wave_count: 10000 };
+    const args = { task: "dm", current_wave_count: 100, max_wave_count: 10000 };
     const argv = engines.myEngine().execArgv || [];
     for (let i = 0; i < argv.length; i++) {
         const arg = argv[i];
