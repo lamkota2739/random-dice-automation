@@ -2,6 +2,13 @@
 
 AutoJs6の環境でAndroid端末を自動操作するJavaScriptスクリプト群。
 
+## 環境設定
+
+### 権限の付与
+
+- スクリプト実行時に表示される許可を予め付与: `adb shell appops set org.autojs.autojs6 PROJECT_MEDIA allow`
+  - パッケージの確認: `adb shell "pm list packages | grep autojs"`
+
 ## Coop-Distortion-Monolith実行手順
 
 1. 実行するJavaScriptスクリプトが配置されている`src`フォルダをAutoJs6のworking dirに設定。
