@@ -287,10 +287,10 @@ CoopDistortionMonolith.monitorWaveProgression = function () {
 };
 
 CoopDistortionMonolith.copyBarrier = function () {
-    for (let i = 0; i < this.jokerSlots.length; i++) {
-        const jokerSlot = this.jokerSlots[i];
-        this.board.swipeSlot(jokerSlot.coords, this.barrierSlot.coords);
-    }
+    this.board.swipeSlot(this.jokerSlots[0].coords, this.barrierSlot.coords);
+    this.board.swipeSlot(this.jokerSlots[1].coords, this.barrierSlot.coords);
+    this.board.swipeSlot(this.jokerSlots[2].coords, this.barrierSlot.coords);
+    this.board.swipeSlot(this.jokerSlots[3].coords, this.barrierSlot.coords);
 };
 
 // ===== Tasks index =====
