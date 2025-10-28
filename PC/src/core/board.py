@@ -8,7 +8,6 @@ class Board:
     def __init__(self, uic: Uia2Controller, px_profile: PixelProfile):
         self.uic = uic
         self.px_profile = px_profile
-        self.rect = px_profile.BOARD_BOUNDARY_RECT
 
         self.swipe_slot_duration = 0.005
         self.swipe_point_offset = 50
