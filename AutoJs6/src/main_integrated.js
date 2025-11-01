@@ -229,8 +229,8 @@ CoopDistortionMonolith.init = function (uic) {
     this.field = Object.create(Field).init(this.pxProfile);
     this.board = Object.create(Board).init(this.uic, this.pxProfile);
     this.boardState = [
-        [Object.create(DiceSlot).init("a5"), Object.create(DiceSlot).init("b5")],
-        [Object.create(DiceSlot).init("b4"), Object.create(DiceSlot).init("c5")],
+        [Object.create(DiceSlot).init("a4"), Object.create(DiceSlot).init("b4")],
+        [Object.create(DiceSlot).init("b5"), Object.create(DiceSlot).init("c5")],
         [Object.create(DiceSlot).init("c3"), Object.create(DiceSlot).init("c4")]
     ];
     this.numMonolithGroup = this.boardState.length;
