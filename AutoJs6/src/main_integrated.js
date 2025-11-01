@@ -161,7 +161,7 @@ let UiController = {
         if (!requestScreenCapture()) throw new Error("Screen capture permission required");
         return this;
     },
-    swipe: function (x1, y1, x2, y2, duration) { swipe(x1, y1, x2, y2, duration * 1000); sleep(30); },
+    swipe: function (x1, y1, x2, y2, duration) { swipe(x1, y1, x2, y2, duration * 1000); sleep(50); },
     screencap: function () { const img = captureScreen(); if (!img) throw new Error("Screenshot failed"); return img; },
     roiScreencap: function (roiList, extractChannel) {
         const img = this.screencap(); if (!img) return null;
@@ -295,6 +295,7 @@ CoopDistortionMonolith.copyBarrier = function () {
     this.board.swipeSlot(this.jokerSlots[1].coords, this.barrierSlot.coords);
     this.board.swipeSlot(this.jokerSlots[2].coords, this.barrierSlot.coords);
     this.board.swipeSlot(this.jokerSlots[3].coords, this.barrierSlot.coords);
+    console.log("barrier!");
 };
 
 // ===== Tasks index =====
