@@ -195,16 +195,24 @@ let UiController = {
 // ===== utils.js =====
 function sleepAsync(sec) { return new Promise(r => setTimeout(r, sec * 1000)); }
 function periodic(func, intervalSec) {
-    function loop(nextTime) {
+    let nextTime = Date.now() / 1000 + intervalSec;
+
+    function schedule() {
         const now = Date.now() / 1000;
         const sleepTime = nextTime - now;
-        return sleepAsync(sleepTime > 0 ? sleepTime : 0).then(() => {
-            const result = func();
-            const p = result instanceof Promise ? result : Promise.resolve();
-            return p.then(() => loop(nextTime + intervalSec));
+        if (sleepTime < 0) {
+            nextTime = now;
+            sleepTime = 0;
+        }
+
+        sleepAsync(sleepTime).then(() => {
+            func();
+            nextTime += intervalSec;
+            schedule();
         });
     }
-    return loop(Date.now() / 1000 + intervalSec);
+
+    schedule();
 }
 
 // ===== Task.js =====
