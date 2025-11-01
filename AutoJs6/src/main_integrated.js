@@ -1,3 +1,5 @@
+timers.keepAlive();
+
 // ===== constants.js =====
 const GameMode = { FIGHT: "fight", COOP: "coop" };
 const DisplayResolution = {
