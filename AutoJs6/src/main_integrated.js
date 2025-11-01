@@ -194,8 +194,6 @@ let UiController = {
 
 // ===== utils.js =====
 function sleepAsync(sec) { return new Promise(r => setTimeout(r, sec * 1000)); }
-function acquireLock(lock) { return new Promise(r => { (function wait() { if (!lock.value) { lock.value = true; r(); } else setTimeout(wait, 10); })(); }); }
-function releaseLock(lock) { lock.value = false; }
 function periodic(func, intervalSec) {
     function loop(nextTime) {
         const now = Date.now() / 1000;
@@ -237,7 +235,6 @@ CoopDistortionMonolith.init = function (uic) {
     this.monolithFireCount = 0;
     this.barrierCooldown = 21.0;
     this.lastBarrierCopyTime = Date.now() / 1000 - this.barrierCooldown;
-    this.monolithLock = { value: false };
     this.barrierSlot = Object.create(DiceSlot).init("b2");
     this.jokerSlots = ["a2", "b1", "b3", "c2"].map(s => Object.create(DiceSlot).init(s));
     return this;
@@ -252,21 +249,18 @@ CoopDistortionMonolith.run = function (args) {
 };
 
 CoopDistortionMonolith.runFireMonolith = function () {
-    return acquireLock(this.monolithLock).then(() => {
-        const slot1 = this.boardState[this.groupIdx][0];
-        const slot2 = this.boardState[this.groupIdx][1];
-        this.board.swipeSlot(slot1.coords, slot2.coords);
-        this.board.swipeSlot(slot2.coords, slot1.coords);
-        releaseLock(this.monolithLock);
+    const slot1 = this.boardState[this.groupIdx][0];
+    const slot2 = this.boardState[this.groupIdx][1];
+    this.board.swipeSlot(slot1.coords, slot2.coords);
+    this.board.swipeSlot(slot2.coords, slot1.coords);
 
-        this.groupIdx = (this.groupIdx + 1) % this.numMonolithGroup;
+    this.groupIdx = (this.groupIdx + 1) % this.numMonolithGroup;
 
-        if (this.monolithFireCount % this.numMonolithGroup === 0) {
-            this.monolithFireCount = 0;
-            this.monitorWaveProgression();
-        }
-        this.monolithFireCount += 1;
-    });
+    if (this.monolithFireCount % this.numMonolithGroup === 0) {
+        this.monolithFireCount = 0;
+        this.monitorWaveProgression();
+    }
+    this.monolithFireCount += 1;
 };
 
 CoopDistortionMonolith.updateScreencap = function () {
@@ -281,10 +275,8 @@ CoopDistortionMonolith.monitorWaveProgression = function () {
 
     this.updateScreencap();
     if (this.field.waveProgressionDetected()) {
-        acquireLock(this.monolithLock).then(() => {
-            this.copyBarrier();
-            this.lastBarrierCopyTime = now;
-        }).then(() => releaseLock(this.monolithLock));
+        this.copyBarrier();
+        this.lastBarrierCopyTime = now;
     }
 };
 
